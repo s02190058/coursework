@@ -1,5 +1,14 @@
 # IDE
-./idea
+.idea
 
 # notebook
 .ipynb_checkpoints/
+
+# core latex/pdflatex auxiliary files
+*.aux
+*.log
+*.out
+*.toc
+
+# minted
+**/_minted-*

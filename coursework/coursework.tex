@@ -1,0 +1,423 @@
+\documentclass[12pt]{article}
+
+% = Подключение пакетов =
+%  - Поддержка русских букв -
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel}
+%  - Размеры полей -
+\usepackage[right=1.5cm,top=2cm,left=3cm,bottom=2cm]{geometry}
+%  - Отступ в начале первого абзаца -
+\usepackage{indentfirst}
+%  - Титульный лист с содержанием -
+\usepackage{cw}
+%  - Гиперссылки (url, \ref-ссылки, \cite-ссылки)
+\usepackage{hyperref}
+%  - Отображение математических формул
+\usepackage{amsthm,amssymb,amsmath}
+%  - Отображение кода
+\usepackage{minted}
+
+% = Общие настройки =
+%  - Полуторный межстрочный интервал -
+\linespread{1.5}
+%  - Разрешить разреженные строки и запретить перенос -
+\sloppy
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+
+
+% = (!!!) Здесь впишите свои данные =
+%  - Название работы -
+\cwTitle{Поиск оптимальных алгоритмов умножения матриц}
+%  - Как вас зовут, В РОДИТЕЛЬНОМ ПАДЕЖЕ -
+\cwAuthor{Баканова Артёма Михайловича}
+%  - Номер группы -
+\cwGroup{318}
+%  - Степень, должность и Фамилия И.О. научного руководителя -
+\cwSupervisorTitle{д.ф.-м.н.,~проф.}
+\cwSupervisorName{Алексеев~В.\,Б.}
+%  - Если показывается неправильный год, то раскомментируйте и напишите правильный -
+% \cwYear{2019}
+
+\begin{document}
+    \cwPutTitleContents
+
+
+    \section{Введение}\label{sec:introduction}
+
+    Умножение матриц является одной из фундаментальных операций в линейной алгебре и широко используется в различных
+    приложениях, таких как машинное обучение, компьютерное зрение и обработка сигналов.
+    Однако, найти оптимальный алгоритм умножения матриц является сложной задачей.
+
+    Традиционно сложность алгоритмов умножения матриц оценивается в количестве операций умножения чисел.
+    Это связано с тем, что последняя является наиболее ресурсозатратной.
+    Таким образом, оптимальный алгоритм должен выигрывать у остальных по числу умножений.
+    Так, стандартный алгоритм умножения матрицы $ m \times n $ на матрицу $ n \times p $
+    \begin{equation}
+        z_{ij} = \sum_{k=1}^{n} x_{ik} y_{kj},
+        \quad i = \overline{1,m}, \: j = \overline{1,p}\label{eq:1}
+    \end{equation}
+    требует $ n^3 $ операций умножения, то есть имеет асимптотическую сложность $ \mathcal{O}(n^3) $.
+
+    Крайне важным шагом в поиске оптимальных алгоритмов стала работа Штрассена~\cite{strassen}.
+    В ней он приводит алгоритм умножения двух квадратных матриц порядка $ n $ с асимптотической сложностью
+    $ \mathcal{O}(n^{\log_2 7}) $.
+    Алгоритм Штрассена основан на том, что для умножения квадратных матриц порядка $ 2 $ требуется лишь $ 7 $ операций
+    умножения.
+
+
+    \section{Постановка задачи}\label{sec:problem}
+
+    Была выдвинута гипотеза, что существует алгоритм умножения двух квадратных матриц порядка $ 3 $, использующий $ 19 $
+    умножений.
+    Необходимо было описать данную задачу в терминах системы уравнений, а затем, используя ряд предположений, перейти к
+    новой системе.
+    Далее требовалось составить программу, вычисляющую последнюю систему в символьном виде.
+
+
+    \section{Основная часть}\label{sec:main}
+
+    \subsection{Переход к системе уравнений}
+    Прежде всего заметим, что стандартный алгоритм умножения матриц~\eqref{eq:1} представляет собой задачу о вычислении
+    семейства билинейных форм.
+    Запишем её как
+    \begin{equation}
+        z_{sr} = \sum_{i=1}^{m} \sum_{j=1}^{n} \sum_{k=1}^{n} \sum_{l=1}^{p} a_{(i,j),(k,l),(r,s)} x_{ij} y_{kl},
+        \quad s = \overline{1, m}, \: r = \overline{1, p} \label{eq:2},
+    \end{equation}
+    где
+    \begin{equation}
+        a_{(i,j),(k,l),(r,s)} =
+        \begin{cases}
+            1,\text{ если } j = k, l = r, s = i;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:3}
+    \end{equation}
+
+    Пусть для данного семейства существует билинейный алгоритм с мультипликативной сложностью $ q $ вида
+    \begin{gather*}
+        D_1(x, y) = L_1'(x, y) \cdot L_1''(x, y), \quad \dots \quad , D_q(x, y) = L_q'(x, y) \cdot L_q''(x, y),\\
+        z_{11} = \sum_{d=1}^{q}\gamma_{11}^d D_d(x, y), \quad \dots \quad , z_{mp} = \sum_{d=1}^{q}\gamma_{pm}^d D_d(x, y),\\
+    \end{gather*}
+    где
+    \begin{gather*}
+        L_1'(x, y) = \sum_{i=1}^{m} \sum_{j=1}^{n} \alpha_{ij}^1 x_{ij}, \quad L_1''(x, y) = \sum_{k=1}^{n} \sum_{l=1}^{p} \beta_{kl}^1 y_{kl};\\
+        \dots \quad ,\\
+        L_q'(x, y) = \sum_{i=1}^{m} \sum_{j=1}^{n} \alpha_{ij}^q x_{ij}, \quad L_q''(x, y) = \sum_{k=1}^{n} \sum_{l=1}^{p} \beta_{kl}^q y_{kl}.\\
+    \end{gather*}
+    Подставив формулы для $ D_d(x, y), L_d'(x, y), L_d''(x, y) $ в выражение для $ z_{sr} $, получим:
+    \begin{equation}
+        z_{sr} = \sum_{d=1}^{q} \gamma_{rs}^d (\sum_{i=1}^{m} \sum_{j=1}^{n} \alpha_{ij}^d x_{ij}) (\sum_{k=1}^{n} \sum_{l=1}^{p} \beta_{kl}^d y_{kl}).\label{eq:4}
+    \end{equation}
+    Раскроем скобки в~\eqref{eq:4} и приравняем к~\eqref{eq:2}.
+    Получим:
+    \begin{equation}
+        \sum_{i=1}^{m} \sum_{j=1}^{n} \sum_{k=1}^{n} \sum_{l=1}^{p} a_{(i,j),(k,l),(r,s)} x_{ij} y_{kl} =
+        \sum_{d=1}^{q} \sum_{i=1}^{m} \sum_{j=1}^{n} \sum_{k=1}^{n} \sum_{l=1}^{p} \alpha_{ij}^d \beta_{kl}^d \gamma_{rs}^d x_{ij} y_{kl}.\label{eq:5}
+    \end{equation}
+    Учитывая, что матрицы $ \| x_{ij} \| $ и $ \| y_{kl} \| $ произвольны, и используя~\eqref{eq:2}, окончательно получим:
+    \begin{equation}
+        \sum_{d=1}^{q} \alpha_{ij} \beta_{kl} \gamma_{rs} =
+        \begin{cases}
+            1,\text{ если } j = k, l = r, s = i;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:6}
+    \end{equation}
+    Таким образом, алгоритм умножения матрицы $ m \times n $ на матрицу $ n \times p $, использующий $ q $ операций
+    умножения чисел, существует тогда и только тогда, когда разрешима система~\eqref{eq:6}.
+
+    \subsection{Переход к новой системе}
+    В нашей задаче $ m = n = p = 3 $, $ q = 19 $.
+    Будем считать, что $ i $, $ j $, $ k $, $ l $, $ r $, $ s $ принимают 3 значения: $ 0, 1, 2 $, а $ d $ принимает
+    $ 19 $ значений: $ 0, 1, 2, \dots , 18 $.
+    Тогда система~\eqref{eq:6} примет вид:
+    \begin{equation}
+        \sum_{d=0}^{18} \alpha_{ij} \beta_{kl} \gamma_{rs} =
+        \begin{cases}
+            1,\text{ если } j = k, l = r, s = i;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:7}
+    \end{equation}
+    Она состоит из $ 729 $ уравнений и имеет $ 513 $ переменных.
+
+    Введём квадратные матрицы порядка $ 3 $ $ A_d=\| \alpha_{ij}^d\| $, $ B_d=\| \beta_{kl}^d\| $, $ C_d=\| \gamma_{rs}^d\| $,
+    $ d = \overline{0,18} $.
+    Если записать алгоритм Штрассена в терминах матриц $ A_d $, $ B_d $, $ C_d $, получим, что $ A_0 = B_0 = C_0 = I $.
+    Потребуем того же и в нашем случае:
+    \begin{equation*}
+        \alpha^0_{ij} \beta^0_{kl} \gamma^0_{rs} =
+        \begin{cases}
+            1, \text{ если } i = j, k = l, r = s;\\
+            0, \text{ иначе.}
+        \end{cases}
+    \end{equation*}
+    Теперь систему~\eqref{eq:7} можно записать, как
+    \begin{equation}
+        \sum_{d=1}^{18} \alpha^d_{ij} \beta^d_{kl} \gamma^d_{rs} =
+        \begin{cases}
+            -1, \text{ если } i = j, k = l, r = s,  \text{ но не выполняется } i=j=k=l=r=s;\\
+            1, \text{ если } j = k, l = r, s = i,  \text{ но не выполняется } i=j=k=l=r=s;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:8}
+    \end{equation}
+    Для удобства все  $ \alpha^d_{ij} $ домножим на $ -1 $ и новые переменные снова обозначим  $\alpha^d_{ij}$.
+    Система примет вид:
+    \begin{equation}
+        \sum_{d=1}^{18} \alpha^d_{ij} \beta^d_{kl} \gamma^d_{rs}=
+        \begin{cases}
+            +1, \text{ если } i = j, k = l, r = s,  \text{ но не выполняется } i = j = k = l = r = s;\\
+            -1, \text{ если } j = k, l = r, s = i,  \text{ но не выполняется } i = j = k = l = r = s;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:9}
+    \end{equation}
+    Неизвестные переменные в системе~\eqref{eq:9} задаются 18 тройками матриц $ A_d $, $ B_d $, $ C_d $.
+    Наложим дополнительное условие: пусть первые 6 троек произвольны, а остальные 12 получаются из этих шести
+    циклическим сдвигом.
+    То есть из каждой тройки матриц $ A_d $, $ B_d $, $ C_d $, $ d=\overline{1,6} $
+    получаются еще 2 тройки: $ B_d $, $ C_d $, $ A_d $ и $ C_d $, $ A_d $, $ B_d $.
+    Тогда система~\eqref{eq:9} преобразуется к виду:
+    \[\sum_{d=1}^{6} (\alpha^d_{ij} \beta^d_{kl} \gamma^d_{rs}+\alpha^d_{kl} \beta^d_{rs} \gamma^d_{ij}+\alpha^d_{rs} \beta^d_{ij} \gamma^d_{kl})=\]
+    \begin{equation}
+        \begin{cases}
+            +1, \text{ если } i = j, k = l, r = s,  \text{ но не выполняется } i = j = k = l = r = s;\\
+            -1, \text{ если } j = k, l = r, s = i  \text{ но не выполняется } i = j = k = l = r = s;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:10}
+    \end{equation}
+    Уравнения для шестёрок $ (ij, kl, rs) $, $ (kl, rs, ij) $, $ (rs, ij, kl) $ оказываются идентичными.
+    Таким образом, исходные $ 729 $ уравнений, кроме $ 9 $, для которых шестёрки имеют вид
+    $ (ij, ij, ij) $, разбиваются на группы по три.
+    Выбрав по одному уравнению из каждой группы, получим $ \frac{729 - 9}{3} + 9 = 249 $ уравнений, содержащих
+    $ \frac{513 - 27}{3} = 162 $ переменные.
+
+    Продолжим накладывать условия на тройки матриц.
+    На множестве $ \{0, 1, 2\} $ рассмотрим всевозможные перестановки:
+    \begin{gather*}
+        \varphi_1:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 0 & 1 & 2
+        \end{pmatrix}, \:
+        \varphi_2:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 2 & 1 & 0
+        \end{pmatrix}, \:
+        \varphi_3:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 0 & 2 & 1
+        \end{pmatrix},\\
+        \varphi_4:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 1 & 0 & 2
+        \end{pmatrix}, \:
+        \varphi_5:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 1 & 2 & 0
+        \end{pmatrix}, \:
+        \varphi_6:
+        \begin{pmatrix}
+            0 & 1 & 2 \\ 2 & 0 & 1
+        \end{pmatrix}.\\
+    \end{gather*}
+    Пару $ \varphi_m(i)\varphi_m(j) $ обозначим, как $ \varphi_m(ij) $, $ m=\overline{1,6} $.
+    Введем новые переменные в виде 6 квадратных матриц порядка 3:
+    \[ X = \| x_{ij} \|, Y = \| y_{kl} \|, Z = \| z_{rs} \|, A = \| a_{ij} \|, B = \| b_{kl} \|, C= \| c_{rs} \| \]
+    и положим
+    \begin{gather*}
+        \alpha^1_{ij}=x_{\varphi_1 (ij)}=x_{ij}, \alpha^2_{ij}=x_{\varphi_2 (ij)},\\
+        \alpha^3_{ij}=a_{\varphi_3 (ij)},  \alpha^4_{ij}=a_{\varphi_4 (ij)}, \alpha^5_{ij}=a_{\varphi_5 (ij)}, \alpha^6_{ij}=a_{\varphi_6 (ij)},\\
+        \beta^1_{kl}=y_{\varphi_1 (kl)}=y_{kl}, \beta^2_{kl}=y_{\varphi_2 (kl)},\\
+        \beta^3_{kl}=b_{\varphi_3 (kl)},  \beta^4_{kl}=b_{\varphi_4 (kl)}, \beta^5_{kl}=b_{\varphi_5 (kl)}, \beta^6_{kl}=b_{\varphi_6 (kl)},\\
+        \gamma^1_{rs}=z_{\varphi_1 (rs)}=z_{rs}, \gamma^2_{rs}=z_{\varphi_2 (rs)},\\
+        \gamma^3_{rs}=c_{\varphi_3 (rs)},  \gamma^4_{rs}=c_{\varphi_4 (rs)}, \gamma^5_{rs}=c_{\varphi_5 (rs)}, \gamma^6_{rs}=c_{\varphi_6 (rs)}.\\
+    \end{gather*}
+    Тогда система~\eqref{eq:10} примет вид:
+    \begin{gather*}
+        x_{ij} y_{kl} z_{rs}+x_{kl} y_{rs} z_{ij}+x_{rs} y_{ij} z_{kl} +\\
+        +x_{\varphi_2 (ij)} y_{\varphi_2 (kl)} z_{\varphi_2 (rs)}+x_{\varphi_2 (kl)} y_{\varphi_2 (rs)} z_{\varphi_2 (ij)}+x_{\varphi_2 (rs)} y_{\varphi_2 (ij)} z_{\varphi_2 (kl)} +\\
+        +\sum_{d=3}^{6} (a_{\varphi_d (ij)} b_{\varphi_d (kl)} c_{\varphi_d (rs)}+a_{\varphi_d (kl)} b_{\varphi_d (rs)} c_{\varphi_d (ij)}+a_{\varphi_d (rs)} b_{\varphi_d (ij)} c_{\varphi_d (kl)})=\\
+    \end{gather*}
+    \begin{equation}
+        \begin{cases}
+            +1, \text{ если } i=j, k=l, r=s,  \text{ но не выполняется } i=j=k=l=r=s;\\
+            -1, \text{ если } j=k, l=r, s=i  \text{ но не выполняется } i=j=k=l=r=s;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:11}
+    \end{equation}
+    Важно отметить, что уравнения для шестерок $(ij, kl, rs)$ и $(\varphi_2 (ij), \varphi_2 (kl), \varphi_2 (rs))$ оказываются идентичными.
+    Таким образом, все $ 249 $ уравнений, кроме одного, шестёрка которого имеет вид $ (11, 11, 11) $, разбиваются на пары.
+    Выбрав по представителю для каждой пары, получим $ \frac{249 - 1}{2} + 1 = 125 $ уравнений, которые содержат
+    $ 54 $ новых переменных.
+    Из неких соображений уменьшим все неизвестные в матрице $X$ в 2 раза и для новых переменных сохраним те же обозначения.
+    Тогда чтобы система~\eqref{eq:11} оставалась правильной, необходимо все слагаемые в первой и во второй строках домножить на 2.
+    Получаем:
+    \begin{gather*}
+        2 \cdot (x_{ij}y_{kl} z_{rs}+x_{kl} y_{rs} z_{ij}+x_{rs} y_{ij} z_{kl} +\\
+        +x_{\varphi_2 (ij)} y_{\varphi_2 (kl)} z_{\varphi_2 (rs)}+x_{\varphi_2 (kl)} y_{\varphi_2 (rs)} z_{\varphi_2 (ij)}+x_{\varphi_2 (rs)} y_{\varphi_2 (ij)} z_{\varphi_2 (kl)}) +\\
+        +\sum_{d=3}^{6} (a_{\varphi_d (ij)} b_{\varphi_d (kl)} c_{\varphi_d (rs)}+a_{\varphi_d (kl)} b_{\varphi_d (rs)} c_{\varphi_d (ij)}+a_{\varphi_d (rs)} b_{\varphi_d (ij)} c_{\varphi_d (kl)})=\\
+    \end{gather*}
+    \begin{equation}
+        \begin{cases}
+            +1, \text{ если } i=j, k=l, r=s,  \text{ но не выполняется } i=j=k=l=r=s;\\
+            -1, \text{ если } j=k, l=r, s=i  \text{ но не выполняется } i=j=k=l=r=s;\\
+            0, \text{ иначе.}
+        \end{cases}\label{eq:12}
+    \end{equation}
+
+    Обозначим $\varepsilon = -\frac 12 + \frac{\sqrt{3}}{2} i$ -- комплексный корень третьей степени из 1.
+    Введём условные записи:
+    \begin{gather*}
+    (1)
+        =11+00+22,\\
+        (0)=11+\varepsilon\cdot 00+\varepsilon^2\cdot 22,\\
+        (2)=11+\varepsilon^2\cdot 00+\varepsilon\cdot 22,\\
+        (3)=(02+21+10)+(20+01+12),\\
+        (4)=[(02+21+10)-(20+01+12)]\cdot \frac{i}{\sqrt{3}},\\
+        (5)=(02+\varepsilon^2\cdot 21+\varepsilon\cdot 10)+(20+\varepsilon\cdot 01+\varepsilon^2\cdot 12),\\
+        (6)=(02+\varepsilon\cdot 21+\varepsilon^2\cdot 10)+(20+\varepsilon^2\cdot 01+\varepsilon\cdot 12),\\
+        (7)=[(02+\varepsilon\cdot 21+\varepsilon^2\cdot 10)-(20+\varepsilon^2\cdot 01+\varepsilon\cdot 12)]\cdot \frac{i}{\sqrt{3}},\\
+        (8)=[(02+\varepsilon^2\cdot 21+\varepsilon\cdot 10)-(20+\varepsilon\cdot 01+\varepsilon^2\cdot 12)]\cdot \frac{i}{\sqrt{3}}.\\
+    \end{gather*}
+    В заключительный раз введём новые переменные:
+    \begin{gather*}
+        x_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} x_{ij}, m=\overline{0,8},
+        y_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} y_{ij}, m=\overline{0,8},
+        z_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} z_{ij}, m=\overline{0,8},\\
+        a_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} a_{ij}, m=\overline{0,8},
+        b_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} b_{ij}, m=\overline{0,8},
+        c_m= \sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} c_{ij}, m=\overline{0,8},
+    \end{gather*}
+    где $ t_{ij}^{(m)} $ коэффициент, стоящий у пары индексов $ (ij) $ в условной записи для $ (m) $.
+    Через введённые таким образом новые переменные однозначно выражаются предыдущие.
+
+    Определим $ \varphi_d(m) $ следующим образом.
+    Возьмём произвольную запись $ (m) $.
+    Применим ко всем парам индексов части перестановку $ \varphi_d $.
+    Полученный результат и будем обозначать, как $ \varphi_d(m) $.
+    Нетрудно показать, что $ \varphi_d(m) = h_{d,m} \psi_d(m) $, $ m = \overline{0,8} $, $ d=\overline{1,6} $, где
+    $ h_{d,m} $ --- константы, приведённые в таблице ниже, $ \psi_d $ --- некоторые перестановки на множестве $ \{0, 1, \dots, 8\} $.
+    Обозначим $ \varphi_d(x_m) = h_{d,m} x_{\psi_d(m)} $; аналогично для переменных $ y, z, a, b, c $.
+
+    \begin{table}
+        \centering
+        \begin{tabular}{|c|c|c|c|c|c|c|}
+            \hline
+            $$  & $\varphi_1$ & $\varphi_2$ & $\varphi_3$        & $\varphi_4$        & $\varphi_5$       & $\varphi_6$       \\
+            \hline
+            (0) & 1           & 1           & $ \varepsilon $    & $ \varepsilon^2 $  & $ \varepsilon^2 $ & $ \varepsilon $   \\
+            \hline
+            (1) & 1           & 1           & 1                  & 1                  & 1                 & 1                 \\
+            \hline
+            (2) & 1           & 1           & $ \varepsilon^2 $  & $ \varepsilon $    & $ \varepsilon $   & $ \varepsilon^2 $ \\
+            \hline
+            (3) & 1           & 1           & 1                  & 1                  & 1                 & 1                 \\
+            \hline
+            (4) & 1           & -1          & -1                 & -1                 & 2                 & 1                 \\
+            \hline
+            (5) & 1           & 1           & $ \varepsilon^2 $  & $ \varepsilon $    & $ \varepsilon $   & $ \varepsilon^2 $ \\
+            \hline
+            (6) & 1           & 1           & $ \varepsilon $    & $ \varepsilon^2 $  & $ \varepsilon^2 $ & $ \varepsilon $   \\
+            \hline
+            (7) & 1           & -1          & $ -\varepsilon $   & $ -\varepsilon^2 $ & $ \varepsilon^2 $ & $ \varepsilon $   \\
+            \hline
+            (8) & 1           & -1          & $ -\varepsilon^2 $ & $ -\varepsilon $   & $ \varepsilon $   & $ \varepsilon^2 $ \\
+            \hline
+        \end{tabular}
+        \caption{$h_{d,m}$}
+        \label{tab:$h_{dm}$}
+    \end{table}
+
+    \subsection{Построение новой системы}\label{subsec:--}
+    Начнём строить систему в новых переменных.
+    Для произвольной тройки $ (m, p, q) $ определим правую часть уравнения, как
+    \begin{gather*}
+        2\cdot (x_{m} y_{p} z_{q}+x_{p} y_{q} z_{m}+x_{q} y_{m} z_{p}) +\\
+        +2 \cdot (\varphi_2 (x_m) \varphi_2 (y_p) \varphi_2 (z_q)+ \varphi_2 (x_p) \varphi_2 (y_q) \varphi_2 (z_m)+ \varphi_2 (x_q) \varphi_2 (y_m) \varphi_2 (z_p))+\\
+    \end{gather*}
+    \begin{equation}
+        +\sum_{d=3}^{6} (\varphi_d (a_m) \varphi_d (b_p) \varphi_d (c_q)+ \varphi_d (a_p) \varphi_d (b_q) \varphi_d (c_m) + \varphi_d (a_q) \varphi_d (b_m) \varphi_d (c_p)).\label{eq:13}
+    \end{equation}
+    При этом уравнения для для троек
+    $(m, p, q)$, $(p, q, m)$, $(q, m, p)$,
+    $(\varphi_2 (m), \varphi_2(p), \varphi_2(q))$, $(\varphi_2 (p), \varphi_2(q), \varphi_2(m))$, $(\varphi_2 (q), \varphi_2(m), \varphi_2(p))$
+    оказываются идентичными.
+
+    Из определения новых переменных следует, что
+    \begin{gather*}
+        x_{m} y_{p} z_{q}+x_{p} y_{q} z_{m}+x_{q} y_{m} z_{p}=\\
+        =(\sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} x_{ij}) (\sum_{k=0}^2 \sum_{l=0}^2 t_{kl}^{(p)} y_{kl})  (\sum_{r=0}^2 \sum_{s=0}^2 t_{rs}^{(q)} z_{rs}) +\\
+        +(\sum_{k=0}^2 \sum_{l=0}^2 t_{kl}^{(p)} x_{kl})  (\sum_{r=0}^2 \sum_{s=0}^2 t_{rs}^{(q)} y_{rs}) (\sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} z_{ij}) +\\
+        + (\sum_{r=0}^2 \sum_{s=0}^2 t_{rs}^{(q)} x_{rs}) (\sum_{i=0}^2 \sum_{j=0}^2 t_{ij}^{(m)} y_{ij}) (\sum_{k=0}^2 \sum_{l=0}^2 t_{kl}^{(p)} z_{kl})  =\\
+        =\sum_{i=0}^2 \sum_{j=0}^2 \sum_{k=0}^2 \sum_{l=0}^2 \sum_{r=0}^2 \sum_{s=0}^2 t_{ij}^{(m)} t_{kl}^{(p)} t_{rs}^{(q)} (x_{ij}y_{kl}z_{rs} + x_{kl}y_{rs}z_{ij} + x_{rs}y_{ij}z_{kl}).\\
+    \end{gather*}
+    Аналогично
+    \begin{gather*}
+        \varphi_2 (x_m) \varphi_2 (y_p) \varphi_2 (z_q)+ \varphi_2 (x_p) \varphi_2 (y_q) \varphi_2 (z_m)+ \varphi_2 (x_q) \varphi_2 (y_m) \varphi_2 (z_p)=\\
+        =\sum_{i,j,k,l,r,s=0}^2 t_{ij}^{(m)} t_{kl}^{(p)} t_{rs}^{(q)} (x_{\varphi_2 (ij)}y_{\varphi_2 (kl)}z_{\varphi_2 (rs)} + x_{\varphi_2 (kl)}y_{\varphi_2 (rs)}z_{\varphi_2 (ij)} + x_{\varphi_2 (rs)}y_{\varphi_2 (ij)}z_{\varphi_2 (kl)})\\
+    \end{gather*}
+    и
+    \begin{gather*}
+        \varphi_d (a_m) \varphi_d (b_p) \varphi_d (c_q)+ \varphi_d (a_p) \varphi_d (b_q) \varphi_d (c_m)+ \varphi_d (a_q) \varphi_d (b_m) \varphi_d (c_p)=\\
+        =\sum_{i,j,k,l,r,s=0}^2 t_{ij}^{(m)} t_{kl}^{(p)} t_{rs}^{(q)} (a_{\varphi_d (ij)}b_{\varphi_d (kl)}c_{\varphi_d (rs)} + a_{\varphi_d (kl)}b_{\varphi_d (rs)}c_{\varphi_d (ij)} + a_{\varphi_d (rs)}b_{\varphi_d (ij)}c_{\varphi_d (kl)}).\\
+    \end{gather*}
+    Таким образом, левую часть уравнения для тройки $(m, p, q)$ можно записать, как
+    \begin{gather*}
+        =\sum_{i,j,k,l,r,s=0}^2 t_{ij}^{(m)}\cdot t_{kl}^{(p)}\cdot t_{rs}^{(q)}\cdot (2\cdot (x_{ij}y_{kl}z_{rs} + x_{kl}y_{rs}z_{ij} + x_{rs}y_{ij}z_{kl})+\\
+        + 2\cdot (x_{\varphi_2 (ij)}y_{\varphi_2 (kl)}z_{\varphi_2 (rs)} +
+        x_{\varphi_2 (kl)}y_{\varphi_2 (rs)}z_{\varphi_2 (ij)} + x_{\varphi_2 (rs)}y_{\varphi_2 (ij)}z_{\varphi_2 (kl)}) +\\
+        + \sum_{d=3}^{6}a_{\varphi_d (ij)}b_{\varphi_d (kl)}c_{\varphi_d (rs)} + a_{\varphi_d (kl)}b_{\varphi_d (rs)}c_{\varphi_d (ij)} + a_{\varphi_d (rs)}b_{\varphi_d (ij)}c_{\varphi_d (kl)}).\\
+    \end{gather*}
+    Следовательно, левая часть нового уравнения представляет собой линейную комбинацию левых частей уравнений из системы~\eqref{eq:12},
+    причём уравнение для $(ij,kl,rs)$ берётся с коэффициентом:
+    \[
+        t_{ij}^{(m)} t_{kl}^{(p)} t_{rs}^{(q)}.
+    \]
+    Обозначим правую часть уравнения для $(ij,kl,rs)$ в системе~\eqref{eq:12} через $f_{ij,kl,rs}$.
+    Тогда для того, чтобы уравнение для тройки $(m, p, q)$ было линейной комбинацией уравнений из~\eqref{eq:12}, его правая часть должна выглядеть, как
+    \begin{equation}
+        \sum_{i,j,k,l,r,s=0}^2 t_{ij}^{(m)} t_{kl}^{(p)} t_{rs}^{(q)} f_{ij,kl,rs}.\label{eq:14}
+    \end{equation}
+
+    Таким образом, используя ряд предположений, мы перешли от системы~\eqref{eq:7} к новой системе.
+    Для каждой тройки $ (m, p, q) $ левая и правая части уравнения строятся по формулам~\eqref{eq:13} и~\eqref{eq:14}, соответственно.
+
+    \subsection{Описание программы}\label{subsec:-2}
+
+    Программа для составления уравнений новой системы была написана на языке программирования Python с использованием пакета для символьных вычислений SymPy.
+    Были найдены и загружены константы $ h_{d,m} $, $ m=\overline{0,8} $, $ d=\overline{1,6} $, $ t_{ij}^{(m)} $, $ m=\overline{0,8} $, $ i,j=\overline{0,2} $ и перестановки
+    $ \psi_m $, $ m=\overline{0,8} $.
+    Функции \texttt{generate\_left} и \texttt{generate\_right} вычисляют левую и правую части уравнения для каждой тройки $ (m, p, q) $.
+    С помощью трёхмерного массива \texttt{is\_counted} отсекались одинаковые уравнения, чтобы ускорить работу программы.
+    Также программа вычисляет уравнения в \("\)сжатом\("\) виде.
+
+
+    \section{Полученные результаты}\label{sec:results}
+
+    Программа вычислила все уравнения, пропуская тройки, уравнения для которых уже были посчитаны.
+    Также были исключены тождества.
+    В итоге вышло $ 125 $ уравнений.
+    Все коэффициенты получились целыми.
+    Результат был сравнён с полученными ранее --- все уравнения совпали.
+
+
+    \addcontentsline{toc}{section}{Список литературы}%
+    \begin{thebibliography}{99}
+        \bibitem{strassen} Strassen~V.\, Gaussian elimination is not optimal~// Numer. Math. 1969, том~13. С.~354--356.
+        %\bibitem{conf} Петров~П.\,П. Статья в сборнике~// Сборник трудов той самой конференции. 2000. С.~66--70.
+        %\bibitem{book} Петров~П.\,П. Книга. М:~Макс Пресс. 2000.
+    \end{thebibliography}
+
+    \newpage
+
+
+    \section{Приложение}\label{sec:supplement}
+
+    \subsection{Исходный код}\label{subsec:-}
+
+    \inputminted[
+        fontsize=\footnotesize, % set font size
+        linenos,
+        frame=lines,
+    ]{python}{../equations.py}
+
+\end{document}
