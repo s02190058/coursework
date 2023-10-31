@@ -1,6 +1,9 @@
 # IDE
 .idea
 
+# virtual environment
+.venv
+
 # notebook
 .ipynb_checkpoints/
 
