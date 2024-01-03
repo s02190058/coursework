@@ -1,0 +1,74 @@
+\ProvidesPackage{practice}
+
+\RequirePackage{graphicx}
+
+\def\practice@title{???}
+\def\practice@author{???}
+\def\practice@supervisor@title{???}
+\def\practice@supervisor@name{???}
+\edef\practice@year{\the\year}
+\def\practice@boss@title{???}
+\def\practice@boss@name{???}
+
+\def\prTitle#1{\def\practice@title{#1}}
+\def\prAuthor#1{\def\practice@author{#1}}
+\def\prSupervisorTitle#1{\def\practice@supervisor@title{#1}}
+\def\prSupervisorName#1{\def\practice@supervisor@name{#1}}
+\def\prBossTitle#1{\def\practice@boss@title{#1}}
+\def\prBossName#1{\def\practice@boss@name{#1}}
+\def\prYear#1{\def\practice@year{#1}}
+
+\newcommand\prPutTitleContents{%
+  \pagestyle{empty}%
+  \begin{center}\linespread{1}%
+    \LARGE Московский государственный университет \\ имени М.\,В.~Ломоносова
+    
+    \vspace*{10pt}
+    
+    \Large Факультет вычислительной математики и кибернетики
+    
+    Кафедра математической кибернетики
+  \end{center}%
+  \vfill%
+  \begin{center}\large%
+    Отчёт по преддипломной практике
+    
+    \textbf{\Large<<\practice@title>>}
+    
+    \vspace*{10pt}
+    
+    студента группы 418
+    
+    \practice@author%
+  \end{center}%
+  \vfill%
+  \begin{flushright}%
+    \begin{tabular}{@{}l@{}}
+      \textbf{Научный руководитель:} \\
+      \qquad
+      \begin{tabular}{@{}l@{}}
+        \practice@supervisor@title \\
+        \practice@supervisor@name
+      \end{tabular} \\
+      \\
+      \textbf{Руководитель практики от факультета:} \\
+      \qquad
+      \begin{tabular}{@{}l@{}}
+        \practice@boss@title \\
+        \practice@boss@name
+      \end{tabular} \\
+    \end{tabular}
+  \end{flushright}%
+  \vfill%
+  \vfill%
+  \begin{center}%
+    Москва, \practice@year%
+  \end{center}%
+  \pagebreak
+  
+  \pagestyle{plain}
+  
+  \tableofcontents
+  
+  \pagebreak%
+}

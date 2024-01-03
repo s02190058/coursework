@@ -2,10 +2,10 @@
 .idea
 
 # virtual environment
-.venv
+env
 
 # notebook
-.ipynb_checkpoints/
+.ipynb_checkpoints
 
 # core latex/pdflatex auxiliary files
 *.aux
@@ -15,3 +15,6 @@
 
 # minted
 **/_minted-*
+
+# build artifacts
+kozlov/build
